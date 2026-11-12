@@ -16,7 +16,6 @@ def get_gold_price():
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # TODO: سلول یا المان دقیق قیمت را با CSS Selector سایت خودتان تنظیم کنید
-        # مثال: قیمت در یک تگ با کلاس price قرار دارد
         price_element = soup.select_one('.gold-price-class') 
         
         if price_element:
