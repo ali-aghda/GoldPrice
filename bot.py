@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
+CHAT_ID = "-1004461570949"
 
 URL_AYAAR = 'https://ayaar.ir'
 URL_ALANCHAND = 'https://alanchand.com/en'
