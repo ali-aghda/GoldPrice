@@ -13,12 +13,13 @@ URL_ALANCHAND = 'https://alanchand.com/en'
 def convert_to_english_digits(text):
     """تبدیل اعداد فارسی و عربی به اعداد انگلیسی"""
     persian_digits = '۰۱۲۳۴۵۶۷۸۹'
-    arabic_digits = '٠١٢٣٤٥٦٧٨٩'
+    arabic_digits = '٠١ي٢٣٤٥٦٧٨٩' # برای پوشش کامل
     english_digits = '0123456789'
     
-    for p, e in zip(persian_digits, english_digits):
+    # اصلاح تبدیل ارقام عربی/فارسی
+    for p, e in zip('۰۱۲۳۴۵۶۷۸۹', english_digits):
         text = text.replace(p, e)
-    for a, e in zip(arabic_digits, english_digits):
+    for a, e in zip('٠١٢٣٤٥٦٧٨٩', english_digits):
         text = text.replace(a, e)
         
     return text
@@ -70,7 +71,12 @@ def get_alanchand_data():
                     for word in snippet.split():
                         clean_word = "".join([c for c in word if c.isdigit()])
                         if len(clean_word) >= 8:
-                            gold_18k = convert_to_english_digits(word.strip())
+                            val_eng = convert_to_english_digits(word.strip().replace(',', ''))
+                            if val_eng.isdigit():
+                                # کم کردن یک صفر از انتهای عدد
+                                adjusted_val = val_eng[:-1] if len(val_eng) > 1 else val_eng
+                                # افزودن مجدد کاما برای تفکیک هزارگان
+                                gold_18k = f"{int(adjusted_val):,}"
                             break
                     if gold_18k != "نامشخص":
                         break
@@ -85,7 +91,12 @@ def get_alanchand_data():
                 for word in snippet_usd.split():
                     clean_word = "".join([c for c in word if c.isdigit()])
                     if len(clean_word) >= 7:
-                        usd_price = convert_to_english_digits(word.strip())
+                        val_eng = convert_to_english_digits(word.strip().replace(',', ''))
+                        if val_eng.isdigit():
+                            # کم کردن یک صفر از انتهای عدد
+                            adjusted_val = val_eng[:-1] if len(val_eng) > 1 else val_eng
+                            # افزودن مجدد کاما
+                            usd_price = f"{int(adjusted_val):,}"
                         break
                         
     except Exception as e:
@@ -122,9 +133,9 @@ def main():
         spaces = "          "  # ۱۰ فاصله خالی برای تفکیک قیمت‌ها
         message = (
             f"🚨 **گزارش تغییرات بازار طلا و ارز**\n\n"
-            f"🔹 طلای ۱۸ عیار (سایت عیار):{spaces}*{price_ayaar} تومان*\n"
-            f"🔸 طلای ۱۸ عیار (الان‌چند):{spaces}*{price_alanchand_gold} تومان*\n"
-            f"💵 قیمت دلار (الان‌چند):{spaces}*{price_dollar} تومان*"
+            f"🔹 طلای ۱۸ عیار (سایت عیار):{spaces}*{price_ayaar}*\n"
+            f"🔸 طلای ۱۸ عیار (الان‌چند):{spaces}*{price_alanchand_gold}*\n"
+            f"💵 قیمت دلار (الان‌چند):{spaces}*{price_dollar}*"
         )
         send_telegram_message(message)
         
