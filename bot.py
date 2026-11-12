@@ -111,14 +111,14 @@ def format_price_with_trend(price_str, cache_key, previous_prices):
     old_val = previous_prices.get(cache_key)
     
     if old_val is None:
-        return f"*{price_str}*"
+        return f"{price_str}"
         
     if current_val > old_val:
-        return f"*{price_str}* 🟢 ⬆️"
+        return f"{price_str} 🟢 ⬆️"
     elif current_val < old_val:
-        return f"*{price_str}* 🔴 ⬇️"
+        return f"{price_str} 🔴 ⬇️"
     else:
-        return f"*{price_str}*"
+        return f"{price_str}"
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
