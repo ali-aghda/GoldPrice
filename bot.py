@@ -9,7 +9,6 @@ CHAT_ID = "-1004461570949"
 URL_AYAAR = 'https://ayaar.ir'
 URL_ALANCHAND = 'https://alanchand.com/en'
 
-GITHUB_WORKFLOW_URL = "https://github.com/ali-aghda/Gold-Price-Bot/actions/workflows/check_price.yml"
 CACHE_FILE = 'prices.json'
 
 def load_previous_prices():
@@ -125,17 +124,7 @@ def send_telegram_message(message):
     payload = {
         "chat_id": CHAT_ID,
         "text": message,
-        "parse_mode": "Markdown",
-        "reply_markup": {
-            "inline_keyboard": [
-                [
-                    {
-                        "text": "🔄 به‌روزرسانی آنی قیمت",
-                        "url": GITHUB_WORKFLOW_URL
-                    }
-                ]
-            ]
-        }
+        "parse_mode": "Markdown"
     }
     requests.post(url, json=payload)
 
