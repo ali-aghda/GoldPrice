@@ -28,16 +28,16 @@ def get_gold_price():
         pos = text_content.find(target_phrase)
         
         if pos != -1:
-            # استخراج تکه‌ای از متن بعد از عبارت مورد نظر
             snippet = text_content[pos:pos+70]
             print(f"Found snippet: {snippet}")
             
             words = snippet.split()
-            # جستجو برای پیدا کردن عدد اصلی قیمت (عددی که طول آن بیشتر از ۵ رقم باشد، یعنی قیمت واقعی طلا)
             for word in words:
                 clean_word = "".join([c for c in word if c.isdigit()])
-                if len(clean_word) > 5:  # قیمت طلا چند رقمی است
-                    return word
+                if len(clean_word) > 5:  # پیدا کردن قیمت واقعی
+                    # حذف کامل کلمات اضافی از عدد
+                    price_cleaned = word.replace('عیار', '').replace('سکه‌بهار‌آزادی', '').strip()
+                    return price_cleaned
                     
     except Exception as e:
         print(f"Error scraping price: {e}")
@@ -48,7 +48,7 @@ def send_telegram_message(message):
     payload = {
         "chat_id": CHAT_ID, 
         "text": message, 
-        "parse_mode": "Markdown"  # برای پشتیبانی از قابلیت بولد کردن متن
+        "parse_mode": "Markdown"
     }
     requests.post(url, json=payload)
 
@@ -68,8 +68,9 @@ def main():
 
     # مقایسه قیمت جدید با قیمت قبلی
     if current_price != last_price:
-        # استفاده از ستاره برای بولد کردن قیمت در تلگرام
-        message = f"🚨 قیمت طلا (گرم ۱۸ عیار) تغییر کرد!\n\nقیمت جدید: *{current_price}*"
+        # استفاده از فضای خالی (Space) به تعداد دلخواه برای فاصله گرفتن قیمت جدید
+        spaces = "          "  # ۱۰ فاصله خالی
+        message = f"🚨 قیمت طلا (گرم ۱۸ عیار) تغییر کرد!\n\nقیمت جدید:{spaces}*{current_price}*"
         send_telegram_message(message)
         
         # به‌روزرسانی فایل آخرین قیمت
