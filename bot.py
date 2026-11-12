@@ -17,7 +17,7 @@ def get_ayaar_gold():
         response.encoding = 'utf-8'
         
         if response.status_code != 200:
-            return None
+            return "نامشخص"
 
         soup = BeautifulSoup(response.text, 'html.parser')
         text_content = soup.get_text()
@@ -46,25 +46,42 @@ def get_alanchand_data():
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # جستجوی دقیق‌تر بر اساس بلوک‌های سایت الان‌چند (مشاهده شده در اسکرین‌شات‌ها)
+            # پیدا کردن طلای 18 عیار (18K gold)
+            for text_block in soup.stripped_strings:
+                if "18K gold" in text_block or "18K Gold" in text_block:
+                    # کلمات بعدی را بررسی می‌کنیم تا قیمت اصلی را پیدا کنیم
+                    pass
+            
+            # روش امن‌تر و دقیق‌تر با استفاده از جستجو در متن‌های اطراف کلیدواژه‌ها
             text_content = soup.get_text()
             
-            # استخراج طلای ۱۸ عیار از سایت الان‌چند
-            pos_gold = text_content.find("18K Gold")
-            if pos_gold != -1:
-                snippet_gold = text_content[pos_gold:pos_gold+50]
-                for word in snippet_gold.split():
-                    clean_word = "".join([c for c in word if c.isdigit()])
-                    if len(clean_word) > 5:
-                        gold_18k = word.strip()
+            # استخراج طلای 18 عیار از الان‌چند
+            for keyword in ["18K gold", "18K Gold per G"]:
+                pos_gold = text_content.find(keyword)
+                if pos_gold != -1:
+                    snippet = text_content[pos_gold:pos_gold+80]
+                    for word in snippet.split():
+                        # قیمت طلای 18 عیار ساختار عددی بزرگ دارد (مثل 251,374,000)
+                        clean_word = "".join([c for c in word if c.isdigit()])
+                        if len(clean_word) >= 8:  # اعداد قیمت میلیونی طلا حداقل 8 رقم دارند
+                            gold_18k = word.strip()
+                            break
+                    if gold_18k != "نامشخص":
                         break
-            
-            # استخراج قیمت دلار از سایت الان‌چند
-            pos_usd = text_content.find("US Dollar")
+
+            # استخراج قیمت دلار از الان‌چند (US dollar)
+            pos_usd = text_content.find("US dollar")
+            if pos_usd == -1:
+                pos_usd = text_content.find("US Dollar")
+                
             if pos_usd != -1:
-                snippet_usd = text_content[pos_usd:pos_usd+50]
+                snippet_usd = text_content[pos_usd:pos_usd+80]
                 for word in snippet_usd.split():
                     clean_word = "".join([c for c in word if c.isdigit()])
-                    if len(clean_word) > 5:
+                    # قیمت دلار آزاد در سایت حدود 2,649,000 است (حداقل 7 رقم)
+                    if len(clean_word) >= 7:
                         usd_price = word.strip()
                         break
                         
