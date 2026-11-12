@@ -10,12 +10,15 @@ CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 URL_AYAAR = 'https://ayaar.ir'
 URL_ALANCHAND = 'https://alanchand.com/en'
 
+# لینک دقیق صفحه Actions در گیت‌هاب شما
+GITHUB_WORKFLOW_URL = "https://github.com/ali-aghda/Gold-Price-Bot/actions/workflows/check_price.yml"
+
 def convert_to_english_digits(text):
     """تبدیل اعداد فارسی و عربی به اعداد انگلیسی"""
     english_digits = '0123456789'
     for p, e in zip('۰۱۲۳۴۵۶۷۸۹', english_digits):
         text = text.replace(p, e)
-    for a, e in zip('٠١٢٣٤٥٦٧٨٩', english_digits):
+    for a, e in zip('٠١ي٢٣٤٥٦٧٨٩', english_digits):
         text = text.replace(a, e)
     return text
 
@@ -100,7 +103,17 @@ def send_telegram_message(message):
     payload = {
         "chat_id": CHAT_ID, 
         "text": message, 
-        "parse_mode": "Markdown"
+        "parse_mode": "Markdown",
+        "reply_markup": {
+            "inline_keyboard": [
+                [
+                    {
+                        "text": "🔄 به‌روزرسانی آنی قیمت",
+                        "url": GITHUB_WORKFLOW_URL
+                    }
+                ]
+            ]
+        }
     }
     requests.post(url, json=payload)
 
@@ -115,10 +128,13 @@ def main():
         with open('last_price.txt', 'r', encoding='utf-8') as f:
             last_combined = f.read().strip()
 
-    print(f"Current -> Ayaar: {price_ayaar} | Alan 18K: {price_alanchand_gold} | USD: {price_dollar}")
+    # تشخیص اجرای دستی توسط دکمه شیشه‌ای گیت‌هاب
+    github_event = os.environ.get('GITHUB_EVENT_NAME', '')
+    is_manual_trigger = (github_event == 'workflow_dispatch')
 
-    if current_combined != last_combined:
-        # مرتب‌سازی ساختار خطوط به صورت استاندارد برای جلوگیری از به‌هم‌ریختگی آبشاری
+    print(f"Current -> Ayaar: {price_ayaar} | Alan 18K: {price_alanchand_gold} | USD: {price_dollar} | Manual: {is_manual_trigger}")
+
+    if current_combined != last_combined or is_manual_trigger:
         message = (
             f"🚨 *گزارش تغییرات بازار طلا و ارز*\n\n"
             f"🔹 *طلای ۱۸ عیار (سایت عیار):*\n`{price_ayaar}`\n\n"
@@ -130,7 +146,7 @@ def main():
         with open('last_price.txt', 'w', encoding='utf-8') as f:
             f.write(current_combined)
     else:
-        print("Prices have not changed.")
+        print("Prices have not changed and this is a scheduled run.")
 
 if __name__ == "__main__":
     main()
