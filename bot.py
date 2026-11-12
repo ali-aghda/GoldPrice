@@ -10,6 +10,19 @@ CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 URL_AYAAR = 'https://ayaar.ir'
 URL_ALANCHAND = 'https://alanchand.com/en'
 
+def convert_to_english_digits(text):
+    """تبدیل اعداد فارسی و عربی به اعداد انگلیسی"""
+    persian_digits = '۰۱۲۳۴۵۶۷۸۹'
+    arabic_digits = '٠١٢٣٤٥٦٧٨٩'
+    english_digits = '0123456789'
+    
+    for p, e in zip(persian_digits, english_digits):
+        text = text.replace(p, e)
+    for a, e in zip(arabic_digits, english_digits):
+        text = text.replace(a, e)
+        
+    return text
+
 def get_ayaar_gold():
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
@@ -31,7 +44,8 @@ def get_ayaar_gold():
             for word in words:
                 clean_word = "".join([c for c in word if c.isdigit()])
                 if len(clean_word) > 5:
-                    return word.replace('عیار', '').replace('سکه‌بهار‌آزادی', '').strip()
+                    raw_price = word.replace('عیار', '').replace('سکه‌بهار‌آزادی', '').strip()
+                    return convert_to_english_digits(raw_price)
     except Exception as e:
         print(f"Error scraping Ayaar: {e}")
     return "نامشخص"
@@ -46,15 +60,6 @@ def get_alanchand_data():
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # جستجوی دقیق‌تر بر اساس بلوک‌های سایت الان‌چند (مشاهده شده در اسکرین‌شات‌ها)
-            # پیدا کردن طلای 18 عیار (18K gold)
-            for text_block in soup.stripped_strings:
-                if "18K gold" in text_block or "18K Gold" in text_block:
-                    # کلمات بعدی را بررسی می‌کنیم تا قیمت اصلی را پیدا کنیم
-                    pass
-            
-            # روش امن‌تر و دقیق‌تر با استفاده از جستجو در متن‌های اطراف کلیدواژه‌ها
             text_content = soup.get_text()
             
             # استخراج طلای 18 عیار از الان‌چند
@@ -63,10 +68,9 @@ def get_alanchand_data():
                 if pos_gold != -1:
                     snippet = text_content[pos_gold:pos_gold+80]
                     for word in snippet.split():
-                        # قیمت طلای 18 عیار ساختار عددی بزرگ دارد (مثل 251,374,000)
                         clean_word = "".join([c for c in word if c.isdigit()])
-                        if len(clean_word) >= 8:  # اعداد قیمت میلیونی طلا حداقل 8 رقم دارند
-                            gold_18k = word.strip()
+                        if len(clean_word) >= 8:
+                            gold_18k = convert_to_english_digits(word.strip())
                             break
                     if gold_18k != "نامشخص":
                         break
@@ -80,9 +84,8 @@ def get_alanchand_data():
                 snippet_usd = text_content[pos_usd:pos_usd+80]
                 for word in snippet_usd.split():
                     clean_word = "".join([c for c in word if c.isdigit()])
-                    # قیمت دلار آزاد در سایت حدود 2,649,000 است (حداقل 7 رقم)
                     if len(clean_word) >= 7:
-                        usd_price = word.strip()
+                        usd_price = convert_to_english_digits(word.strip())
                         break
                         
     except Exception as e:
@@ -119,9 +122,9 @@ def main():
         spaces = "          "  # ۱۰ فاصله خالی برای تفکیک قیمت‌ها
         message = (
             f"🚨 **گزارش تغییرات بازار طلا و ارز**\n\n"
-            f"🔹 طلای ۱۸ عیار (سایت عیار):{spaces}*{price_ayaar}*\n"
-            f"🔸 طلای ۱۸ عیار (الان‌چند):{spaces}*{price_alanchand_gold}*\n"
-            f"💵 قیمت دلار (الان‌چند):{spaces}*{price_dollar}*"
+            f"🔹 طلای ۱۸ عیار (سایت عیار):{spaces}*{price_ayaar} تومان*\n"
+            f"🔸 طلای ۱۸ عیار (الان‌چند):{spaces}*{price_alanchand_gold} تومان*\n"
+            f"💵 قیمت دلار (الان‌چند):{spaces}*{price_dollar} تومان*"
         )
         send_telegram_message(message)
         
