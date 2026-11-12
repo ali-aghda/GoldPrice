@@ -6,20 +6,43 @@ from bs4 import BeautifulSoup
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
-# آدرس وب‌سایت مد نظر شما
-URL = 'https://example.com/gold-price' # آدرس سایت خود را اینجا وارد کنید
+# آدرس وب‌سایت
+URL = 'https://ayaar.ir'
 
 def get_gold_price():
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(URL, headers=headers, timeout=10)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        response = requests.get(URL, headers=headers, timeout=15)
+        response.encoding = 'utf-8' # برای خوانایی بهتر متن‌های فارسی
+        
+        if response.status_code != 200:
+            print(f"Failed to load page, status code: {response.status_code}")
+            return None
+
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # TODO: سلول یا المان دقیق قیمت را با CSS Selector سایت خودتان تنظیم کنید
-        price_element = soup.select_one('.gold-price-class') 
+        # جستجو در کل متن صفحه برای پیدا کردن عبارت «گرم ۱۸ عیار»
+        text_content = soup.get_text()
         
-        if price_element:
-            return price_element.text.strip()
+        # پیدا کردن موقعیت عبارت در متن صفحه
+        target_phrase = "گرم ۱۸ عیار"
+        pos = text_content.find(target_phrase)
+        
+        if pos != -1:
+            # استخراج تکه‌ای از متن بعد از عبارت مورد نظر برای پیدا کردن قیمت
+            snippet = text_content[pos:pos+50] # 50 کاراکتر بعد از عبارت
+            print(f"Found snippet: {snippet}")
+            
+            # جدا کردن کلمات و اعداد استخراج شده
+            words = snippet.split()
+            # معمولاً عدد قیمت بلافاصله بعد از «گرم ۱۸ عیار» قرار می‌گیرد
+            for word in words:
+                # بررسی اینکه آیا کلمه شامل رقم است یا خیر
+                if any(char.isdigit() for char in word):
+                    return word
+                    
     except Exception as e:
         print(f"Error scraping price: {e}")
     return None
@@ -45,7 +68,7 @@ def main():
 
     # مقایسه قیمت جدید با قیمت قبلی
     if current_price != last_price:
-        message = f"🚨 قیمت طلا تغییر کرد!\n\nقیمت جدید: {current_price}"
+        message = f"🚨 قیمت طلا (گرم ۱۸ عیار) تغییر کرد!\n\nقیمت جدید: {current_price}"
         send_telegram_message(message)
         
         # به‌روزرسانی فایل آخرین قیمت
